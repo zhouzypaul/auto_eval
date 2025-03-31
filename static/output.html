@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Output</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --terminal-bg: #1a1b26;
+            --terminal-text: #a9b1d6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            padding: 2rem;
+        }
+
+        .output-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--card-background);
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+
+        h1 {
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .terminal {
+            background: var(--terminal-bg);
+            padding: 1rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            color: var(--terminal-text);
+            line-height: 1.4;
+        }
+
+        .terminal pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .back-button:hover {
+            background: var(--secondary-color);
+        }
+
+        /* ANSI Colors */
+        .terminal .red { color: #f7768e; }
+        .terminal .green { color: #9ece6a; }
+        .terminal .yellow { color: #e0af68; }
+        .terminal .blue { color: #7aa2f7; }
+        .terminal .magenta { color: #bb9af7; }
+        .terminal .cyan { color: #7dcfff; }
+        .terminal .white { color: #c0caf5; }
+        .terminal .bright-red { color: #ff7a93; }
+        .terminal .bright-green { color: #b9f27c; }
+        .terminal .bright-yellow { color: #ff9e64; }
+        .terminal .bright-blue { color: #7da6ff; }
+        .terminal .bright-magenta { color: #bb9af7; }
+        .terminal .bright-cyan { color: #7dcfff; }
+        .terminal .bright-white { color: #c0caf5; }
+    </style>
+</head>
+<body>
+    <div class="output-container">
+        <a href="/page" class="back-button">Back to Dashboard</a>
+        <h1>Job Output <span style="color: var(--text-secondary); font-size: 0.9em; font-weight: normal;">(ID: <span id="jobIdDisplay"></span>)</span></h1>
+        <div class="terminal">
+            <pre id="output">Loading...</pre>
+        </div>
+    </div>
+
+    <script>
+        function processANSI(text) {
+            // Remove terminal control sequences
+            text = text.replace(/\u001b\[\d*[A-Z]/g, '');
+            text = text.replace(/\u001b\[\?\d+[hl]/g, '');
+            text = text.replace(/\u001b\[\d*[ABCD]/g, '');
+            text = text.replace(/\u001b\[\d*[FGJK]/g, '');
+            text = text.replace(/\u001b\[\d*m/g, '');
+            text = text.replace(/\u001b\[\d+;\d+[Hf]/g, '');
+            text = text.replace(/\u001b\[s/g, '');
+            text = text.replace(/\u001b\[u/g, '');
+            text = text.replace(/\u001b\[\d*[JKPS]/g, '');
+            text = text.replace(/\u001b\[\?\d+[hl]/g, '');
+            text = text.replace(/\u001b\[\d*[ABCDEFGJKST]/g, '');
+
+            // Replace common prompt symbols
+            text = text.replace(/\[\d*;\d*[A-Za-z]]/g, '');
+            text = text.replace(/➜/g, '>');
+
+            return text;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('id');
+
+        if (jobId) {
+            document.getElementById('jobIdDisplay').textContent = jobId;
+            fetch(`/jobs/${jobId}/output`)
+                .then(response => response.json())
+                .then(data => {
+                    const cleanOutput = processANSI(data.output);
+                    document.getElementById('output').textContent = cleanOutput;
+                })
+                .catch(error => {
+                    document.getElementById('output').textContent = 'Error loading output: ' + error;
+                });
+        } else {
+            document.getElementById('output').textContent = 'No job ID provided';
+        }
+    </script>
+</body>
+</html>

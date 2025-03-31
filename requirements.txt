@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlmodel
+json_numpy
+libtmux
+python-multipart
+torch
+transformers>=4.42.0
+bitsandbytes
+accelerate
+peft>=0.14
+flask
+portalocker
+slack_sdk
