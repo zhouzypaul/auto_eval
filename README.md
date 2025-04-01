@@ -1,6 +1,12 @@
 # AutoEval
 
-Code Release for [AutoEval: Autonomous Evaluation of Generalist Robot Manipulation Policies in the Real World](). Check out [auto-eval.github.io](https://auto-eval.github.io/) to access the open-access evaluation dashboard on WidowX robots and for instructions of how to get your own policies evaluated by AutoEval. You can host your policy as a server and pass along the IP and port to the dashboard and submit an evaluation job in minutes.
+[](https:/auto-eval.github.io/assets/teaser.png)
+[![Paper](https://img.shields.io/badge/arXiv-2412.07762-df2a2a.svg?style=for-the-badge)](https://auto-eval.github.io/assets/paper.pdf)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Static Badge](https://img.shields.io/badge/Project-Page-a?style=for-the-badge)](https://auto-eval.github.io/)
+
+
+Code Release for [AutoEval: Autonomous Evaluation of Generalist Robot Manipulation Policies in the Real World](https://auto-eval.github.io/assets/paper.pdf). Check out [auto-eval.github.io](https://auto-eval.github.io/) to access the open-access evaluation dashboard on WidowX robots and for instructions of how to get your own policies evaluated by AutoEval. You can host your policy as a server and pass along the IP and port to the dashboard and submit an evaluation job in minutes.
 
 The [website](https://auto-eval.github.io/) contains all the details on submitting jobs to our Bridge-AutoEval stations with four different tasks. The instructions below are for setting up a new AutoEval station locally for a new task, and hosting a dashboard for policy submission.
 
@@ -33,7 +39,14 @@ If you don't want to use the slack bot, you can use the `--no_slack_bot` flag in
 
 ## Quick Start
 ### Setting Up the Robot Environment
-We use [manipulator_gym](https://github.com/rail-berkeley/manipulator_gym) and [agentlace](https://github.com/youliangtan/agentlace) to distribute the robot gym-like environment and policy execution. The robot environment is run on a robot server machine, which can be a lightweight machine (e.g. Intel NUC) that only needs to run ROS and simple python scripts.
+We use [manipulator_gym](https://github.com/rail-berkeley/manipulator_gym) and [agentlace](https://github.com/youliangtan/agentlace) to distribute the robot gym-like environment and policy execution (as illustrated below). The robot environment is run on a robot server machine, which can be a lightweight machine (e.g. Intel NUC) that only needs to run ROS and simple python scripts.
+
+```mermaid
+graph LR
+    A[Robot Driver] <--ROS Topics--> B[Manipulator_gym server]
+    B <--agentlace--> C[Gym Env <-> Policy]
+```
+
 ```bash
 # 1. start ros services
 roslaunch interbotix_xsarm_control xsarm_control.launch robot_model:=wx250s use_rvix:=false
@@ -43,7 +56,7 @@ cd manipulator_gym
 python3 manipulator_server.py --widowx --cam_ids 0
 ```
 
-See [manipulator_gym](https://github.com/rail-berkeley/manipulator_gym) for more details.
+You would also need to install the `interbotix_ros_arms` package for the WidowX robot.See [manipulator_gym's descriptions](https://github.com/rail-berkeley/manipulator_gym?tab=readme-ov-file#viperx-or-widowx) for more details.
 
 ### Important Code Snippets
 Below we describe the main evaluation script and the two ways to run policies: (1) locally (where this auto_eval package is run) or (2) remotely with a policy server-client setup.
@@ -290,21 +303,25 @@ NOTE: this uses custom fork: https://github.com/youliangtan/SimplerEnv
 
 ```bash
 # Test the simplerenv scenes
-python scritps/eval_simpler.py --test --env widowx_open_drawer
-python scritps/eval_simpler.py --test --env widowx_close_drawer
+python scripts/simpler_eval/eval_simpler.py --test --env widowx_open_drawer
+python scripts/simpler_eval/eval_simpler.py --test --env widowx_close_drawer
+python scripts/simpler_eval/eval_simpler.py --test --env widowx_put_eggplant_in_basket
+python scripts/simpler_eval/eval_simpler.py --test --env widowx_put_eggplant_in_sink
 
 # Openvla policy
-python eval_simpler.py --env widowx_open_drawer --openvla --server_host localhost
+python scripts/simpler_eval/eval_simpler.py --env widowx_open_drawer --openvla --server_host localhost
 
 # octo policy
-python eval_simpler.py --env widowx_open_drawer --octo
+python scripts/simpler_eval/eval_simpler.py --env widowx_open_drawer --octo
 
 # gcbc policy
-python eval_simpler.py --env widowx_open_drawer --gcbc
+python scripts/simpler_eval/eval_simpler.py --env widowx_open_drawer --gcbc
 
 # susie policy
-python eval_simpler.py --env widowx_open_drawer --susie --server_host localhost
+python scripts/simpler_eval/eval_simpler.py --env widowx_open_drawer --susie --server_host localhost
 ```
+
+Change the `--env` argument to run on different tasks.
 
 ## Contributing
 To enable code checks and auto-formatting, please install pre-commit hooks (run this in the root directory):
