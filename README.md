@@ -1,14 +1,14 @@
 # AutoEval
 
-[](https:/auto-eval.github.io/assets/teaser.png)
-[![Paper](https://img.shields.io/badge/arXiv-2412.07762-df2a2a.svg?style=for-the-badge)](https://auto-eval.github.io/assets/paper.pdf)
+[![Paper](https://img.shields.io/badge/arXiv-2503.24278-df2a2a.svg?style=for-the-badge)](https://arxiv.org/abs/2503.24278)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Static Badge](https://img.shields.io/badge/Project-Page-a?style=for-the-badge)](https://auto-eval.github.io/)
-
 
 Code Release for [AutoEval: Autonomous Evaluation of Generalist Robot Manipulation Policies in the Real World](https://auto-eval.github.io/assets/paper.pdf). Check out [auto-eval.github.io](https://auto-eval.github.io/) to access the open-access evaluation dashboard on WidowX robots and for instructions of how to get your own policies evaluated by AutoEval. You can host your policy as a server and pass along the IP and port to the dashboard and submit an evaluation job in minutes.
 
 The [website](https://auto-eval.github.io/) contains all the details on submitting jobs to our Bridge-AutoEval stations with four different tasks. The instructions below are for setting up a new AutoEval station locally for a new task, and hosting a dashboard for policy submission.
+
+![teaser](https://auto-eval.github.io/assets/teaser.png)
 
 ## Installations
 
