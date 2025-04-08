@@ -323,6 +323,20 @@ python scripts/simpler_eval/eval_simpler.py --env widowx_open_drawer --susie --s
 
 Change the `--env` argument to run on different tasks.
 
+## Safety
+
+[manipulator_gym](https://github.com/rail-berkeley/manipulator_gym) provides a set of safety gym wrappers that can be used for extended robot operation on the WidowX robot:
+```python
+from manipulator_gym.utils.gym_wrappers import (
+    CheckAndRebootJoints,
+    ClipActionBoxBoundary,
+    InHouseImpedanceControl,
+    LimitMotorMaxEffort,
+)
+```
+
+To set up the robot safety boundary, you can use the `--track_workspace_bounds` option in `scripts/teleop.py`. Then, teleoperate the robot to the maximum allowed robot workspace, and the maximum xyz coordinates will be recorded and printed out. Then, use the `ClipActionBoxBoundary` wrapper to clip the actions to the safety boundary.
+
 ## Contributing
 To enable code checks and auto-formatting, please install pre-commit hooks (run this in the root directory):
 ```bash

@@ -204,9 +204,9 @@ drawer_common_kwargs = dict(
     recovery_policy_type="scripted",
     recovery_policy_kwargs=scripted_out_of_drawer_handle_policy_kwargs,
     workspace_bounds=dict(
-        x=[0.12, float("inf")],  # edge of table
-        y=[-float("inf"), float("inf")],
-        z=[0, float("inf")],
+        x=[0.12602980432553548, 0.3635847125408836],
+        y=[-0.16452473627781203, 0.07700634681364794],
+        z=[0.02160514560120032, 0.163698249549381],
     ),
     # x is towards front wall, y is towards left wall, z is up
     failure_conditions=[
