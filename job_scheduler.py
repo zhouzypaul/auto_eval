@@ -484,6 +484,80 @@ def cancel_job(job_id: str, submitter_id: str = None):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# Admin endpoint to cancel any job
+@app.post("/admin/jobs/{job_id}/cancel")
+def admin_cancel_job(job_id: str, api_key: str = Depends(verify_api_key)):
+    """
+    Admin endpoint to cancel any job regardless of submitter.
+    Requires admin API key for authentication.
+    """
+    try:
+        with Session(engine) as session:
+            # Start a transaction
+            job = session.get(Job, job_id)
+            if not job:
+                raise HTTPException(status_code=404, detail="Job not found")
+
+            # Only allow cancelling jobs that are queued or evaluating
+            if job.status == Status.CANCELLED:
+                raise HTTPException(status_code=400, detail="Job is already cancelled")
+            elif job.status not in [Status.QUEUED, Status.EVALUATING]:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Cannot cancel job with status {job.status}",
+                )
+
+            # If job is evaluating, kill the tmux session
+            tmux_killed = False
+            if job.status == Status.EVALUATING:
+                try:
+                    server = libtmux.Server()
+                    tmux_session_name = f"launcher_{job_id}"
+                    tmux_session = server.find_where(
+                        {"session_name": tmux_session_name}
+                    )
+                    if tmux_session:
+                        print(f"[ADMIN] Killing tmux session {tmux_session_name}")
+                        tmux_session.kill_session()
+                        tmux_killed = True
+                except Exception as e:
+                    print(f"[ADMIN] Error killing tmux session: {e}")
+                    # Continue with cancellation even if tmux kill fails
+
+            # Update job status to cancelled
+            job.status = Status.CANCELLED
+            job.completed_at = time.time()
+            session.add(job)
+
+            # Remove from queue if it's there
+            queue_item = session.exec(
+                select(JobQueue).where(JobQueue.job_id == job_id)
+            ).first()
+            if queue_item:
+                # Handle case where robot column might not exist in older database versions
+                try:
+                    robot_info = f" from the {queue_item.robot} queue"
+                except AttributeError:
+                    robot_info = ""
+                print(f"[ADMIN] Removing job {job_id}{robot_info}")
+                session.delete(queue_item)
+
+            # Commit all changes in a single transaction
+            session.commit()
+
+            return {
+                "status": "success",
+                "message": f"[ADMIN] Job {job_id} cancelled successfully"
+                + (", evaluation tmux session killed" if tmux_killed else ""),
+                "job_status": job.status,
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[ADMIN] Error cancelling job: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Endpoint to get a list of all jobs
 @app.get("/jobs/")
 def get_jobs():

@@ -60,7 +60,7 @@ class ResetMaxSteps:
 
 # Map of task to maximal joint effort
 class MaximalJointEffort:
-    WIDOWX_DRAWER = 1000
+    WIDOWX_DRAWER = 700
     WIDOWX_SINK = 700
 
     @classmethod
