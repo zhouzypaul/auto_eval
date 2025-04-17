@@ -65,17 +65,17 @@ class MaximalJointEffort:
 
     @classmethod
     def get(cls, robot_name):
-        return getattr(cls, robot_name.upper(), 7000)
+        return getattr(cls, robot_name.upper(), 700)
 
 
 # Map of task to maximal joint effort for reset
 class MaximalJointEffortForReset:
-    WIDOWX_DRAWER = 1200
+    WIDOWX_DRAWER = 1500
     WIDOWX_SINK = 700
 
     @classmethod
     def get(cls, robot_name):
-        return getattr(cls, robot_name.upper(), 1000)
+        return getattr(cls, robot_name.upper(), 700)
 
 
 class Result(str):

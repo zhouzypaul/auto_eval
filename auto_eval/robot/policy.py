@@ -661,7 +661,7 @@ class RecordedPolicy(BasePolicy):
 
     def __call__(self, obs_dict, language_instruction):
         if self.current_step >= len(self.action_seq):
-            action = np.zeros(7)
+            action = np.array([0.0] * 6 + [1.0])
         else:
             action = self.action_seq[self.current_step]
         self.current_step += 1
@@ -712,7 +712,7 @@ class SequenceRecordedPolicy(BasePolicy):
         i = self._currently_on_policy_i()
         if i == -1:
             # the current step is out of range
-            action = np.zeros(7)
+            action = np.array([0.0] * 6 + [1.0])
             return action
         action = self.policies[i](obs_dict, language_instruction)
 
