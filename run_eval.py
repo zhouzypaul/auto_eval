@@ -70,6 +70,11 @@ flags.DEFINE_integer(
     1000,
     "Maximum joint effort allowed, anything above this will be cut to null action",
 )
+flags.DEFINE_integer(
+    "maximal_joint_effort_for_reset",
+    None,
+    "Optionally specify a different maximal joint effort for the reset policy. If not specified, will use the same value as maximal_joint_effort.",
+)
 
 flags.DEFINE_bool("debug", False, "Whether to debug or not.")
 flags.DEFINE_string("exp_name", "", "Name of the experiment for wandb logging.")
@@ -341,7 +346,8 @@ def main(_):
     reset_env = (
         LimitMotorMaxEffort(  # don't do impedance because don't want to reverse action
             reset_env,
-            max_effort_limit=FLAGS.maximal_joint_effort,
+            max_effort_limit=FLAGS.maximal_joint_effort_for_reset
+            or FLAGS.maximal_joint_effort,
         )
     )
 

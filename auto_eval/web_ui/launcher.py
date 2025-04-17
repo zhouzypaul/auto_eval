@@ -65,6 +65,16 @@ class MaximalJointEffort:
 
     @classmethod
     def get(cls, robot_name):
+        return getattr(cls, robot_name.upper(), 7000)
+
+
+# Map of task to maximal joint effort for reset
+class MaximalJointEffortForReset:
+    WIDOWX_DRAWER = 1200
+    WIDOWX_SINK = 700
+
+    @classmethod
+    def get(cls, robot_name):
         return getattr(cls, robot_name.upper(), 1000)
 
 
@@ -110,6 +120,9 @@ class Launcher:
 
         # Get the maximal joint effort based on the robot and task
         self.config["maximal_joint_effort"] = MaximalJointEffort.get(robot_name)
+        self.config["maximal_joint_effort_for_reset"] = MaximalJointEffortForReset.get(
+            robot_name
+        )
 
     def run(self):
         print("Running job")
