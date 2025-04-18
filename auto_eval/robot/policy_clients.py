@@ -21,12 +21,8 @@ import numpy as np
 import requests
 from PIL import Image
 
+from auto_eval.utils import get_url
 from auto_eval.utils.info import print_yellow
-
-
-def get_url(host: str, port: int, endpoint: str):
-    port_str = f":{port}" if port >= 0 else ""
-    return f"http://{host}{port_str}/{endpoint}"
 
 
 class OpenWebClient:
