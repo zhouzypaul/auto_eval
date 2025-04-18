@@ -21,6 +21,7 @@ import numpy as np
 import requests
 from PIL import Image
 
+from auto_eval.utils import get_url
 from auto_eval.utils.info import print_yellow
 
 
@@ -57,7 +58,7 @@ class OpenWebClient:
             else {}
         )
         action = self._session.post(
-            f"http://{self.host}:{self.port}/act",
+            get_url(self.host, self.port, "act"),
             json={
                 "image": obs_dict["image_primary"],
                 "instruction": language_instruction,
@@ -77,7 +78,7 @@ class OpenWebClient:
         self,
     ):
         # Post request to the policy server to reset internal states
-        response = self._session.post(f"http://{self.host}:{self.port}/reset")
+        response = self._session.post(get_url(self.host, self.port, "reset"))
         # If we get a response, check if it was successful
         if response.status_code == 404:
             # if the policy server doesn't have a /reset endpoint, ignore
