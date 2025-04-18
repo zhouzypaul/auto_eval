@@ -227,11 +227,11 @@ class PiZeroServer(ActionChunkingObsHistoryPolicyServer):
 
         # normalize the gripper from (-1, 1) to (0, 1)
         r_actions = actions.copy()  # original ones not modifiable
-        r_actions[-1] = (r_actions[-1] + 1) / 2
-        r_actions = np.clip(r_actions, 0, 1)
+        r_actions[:, -1] = (r_actions[:, -1] + 1) / 2
+        r_actions[:, -1] = np.clip(r_actions[:, -1], 0, 1)
 
         # temporal ensembling of actions
-        actions = self._apply_temporal_ensembling(actions)
+        actions = self._apply_temporal_ensembling(r_actions)
 
         return actions
 
