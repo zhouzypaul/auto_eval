@@ -62,6 +62,7 @@ from auto_eval.robot.robot_commands import (
     sleep_and_torque_off,
     torque_on,
 )
+from auto_eval.utils import get_url
 from auto_eval.utils.info import print_red
 from auto_eval.web_ui.launcher import RobotIPs
 
@@ -237,8 +238,18 @@ class PolicyServerTestRequest(BaseModel):
 
 
 def is_port_open(host: str, port: int, timeout: float = 2.0) -> Tuple[bool, str]:
-    """Check if a port is open on a host."""
+    """
+    Check if a port is open on a host.
+    If port < 0, only verify that the hostname can be resolved.
+    """
     try:
+        # If port is negative, only check if hostname can be resolved
+        if port < 0:
+            # Just try to resolve the hostname
+            socket.gethostbyname(host)
+            return True, f"Hostname resolved successfully"
+
+        # Normal port checking
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
         result = sock.connect_ex((host, port))
@@ -267,7 +278,7 @@ def test_policy_server(request: PolicyServerTestRequest):
                 status_code=400,
                 content={
                     "status": "error",
-                    "message": f"Could not connect to policy server at {request.policy_server_ip}:{request.policy_server_port}. {port_message}",
+                    "message": f"Could not connect to policy server at {get_url(request.policy_server_ip, request.policy_server_port)}. {port_message}",
                     "error_type": "port_closed",
                 },
             )
@@ -285,7 +296,9 @@ def test_policy_server(request: PolicyServerTestRequest):
             json_numpy.patch()
 
             raw_response = requests.post(
-                f"http://{request.policy_server_ip}:{request.policy_server_port}/act",
+                get_url(
+                    request.policy_server_ip, request.policy_server_port, endpoint="act"
+                ),
                 json={
                     "image": dummy_image,
                     "proprio": dummy_proprio,
@@ -314,12 +327,12 @@ def test_policy_server(request: PolicyServerTestRequest):
             error_type = "connection_error"
             if isinstance(e, requests.exceptions.Timeout):
                 error_type = "timeout_error"
-                message = f"Connection to policy server at {request.policy_server_ip}:{request.policy_server_port} timed out. The server might be busy or unreachable."
+                message = f"Connection to policy server at {get_url(request.policy_server_ip, request.policy_server_port)} timed out. The server might be busy or unreachable."
             elif isinstance(e, requests.exceptions.ConnectionError):
-                message = f"Could not connect to policy server at {request.policy_server_ip}:{request.policy_server_port}. Please check the IP and port."
+                message = f"Could not connect to policy server at {get_url(request.policy_server_ip, request.policy_server_port)}. Please check the IP and port."
             else:
                 error_type = "request_error"
-                message = f"Error connecting to policy server at {request.policy_server_ip}:{request.policy_server_port}: {str(e)}"
+                message = f"Error connecting to policy server at {get_url(request.policy_server_ip, request.policy_server_port)}. {str(e)}"
 
             return JSONResponse(
                 status_code=400,
