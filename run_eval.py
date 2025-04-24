@@ -420,6 +420,8 @@ def main(_):
             get_current_obs(obs), info, manipulator_interface, slack_bot
         )  # check robot is healthy
         frames_recorder = []
+        actions_recorder = []
+        proprio_recorder = []
         infos = [info]
         eval_policy.reset()
 
@@ -442,6 +444,8 @@ def main(_):
             # obs only contains observation for final step of chunk
             obs, reward, done, trunc, info = env.step(actions)
             frames_recorder.append(get_single_img(obs))
+            actions_recorder.append(actions)
+            proprio_recorder.append(obs["proprio"])
             infos.append(info)
             if log_step:
                 eval_logger.log_step()
@@ -470,6 +474,8 @@ def main(_):
         infos = {k: [info[k] for info in infos] for k in infos[0].keys()}
         infos["eval_len"] = eval_len
         infos["frames"] = frames_recorder
+        infos["actions"] = actions_recorder
+        infos["proprio"] = proprio_recorder
         infos["pre_check_failed"] = pre_check_failed
         infos["post_check_failed"] = post_check_failed
 
@@ -632,6 +638,8 @@ def main(_):
             logging_prefix=language_instruction,
             episode_success=success,
             frames_to_log=eval_infos["frames"],
+            actions=eval_infos["actions"],
+            proprio=eval_infos["proprio"],
             eval_rollout_steps=eval_infos["eval_len"],
             eval_rollout_time=timer.get_times("eval_rollout"),
             max_joint_efforts=wandb.Histogram(max_joint_efforts),
