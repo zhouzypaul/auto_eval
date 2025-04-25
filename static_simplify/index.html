@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Auto Eval Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --success-color: #16a34a;
+            --error-color: #dc2626;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .banner {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .banner h1 {
+            max-width: 1200px;
+            margin: 0 auto;
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--card-background);
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+        }
+
+        .tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .card {
+            background: var(--card-background);
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .advanced-options {
+            margin-top: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            display: none;
+        }
+
+        .advanced-options.show {
+            display: block;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background: var(--secondary-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: var(--card-background);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .waiting-message {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .waiting-message-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .waiting-message-content h3 {
+            color: var(--error-color);
+            margin-bottom: 10px;
+        }
+
+        .robot-status {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-online {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .status-offline {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        .offline-message {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fff5f5;
+            border-left: 4px solid var(--error-color);
+            color: var(--error-color);
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: var(--background-color);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        tr:hover {
+            background: var(--background-color);
+        }
+
+        /* Video feed styles */
+        .video-feeds-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Fixed two-column layout for side-by-side display */
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .video-feed-pair {
+            background: var(--card-background);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .feed-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            font-weight: 500;
+        }
+
+        .video-feed-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .video-feed {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+            width: 100%;
+        }
+
+        .video-feed img {
+            max-width: 500px;
+            width: 100%;
+            height: auto;
+        }
+
+        .video-feed-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .video-feed label {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .video-feed img {
+            width: 100%;
+            border-radius: 0.375rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .video-feed {
+            position: relative;
+        }
+
+        .timestamp-overlay {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            z-index: 5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            table-layout: fixed;
+        }
+
+        .card {
+            overflow-x: auto;
+        }
+
+        th {
+            white-space: nowrap;
+            padding: 0.75rem;
+            background-color: var(--background-color);
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            white-space: normal;
+            padding: 0.75rem;
+            word-wrap: break-word;
+            min-width: 100px;
+        }
+
+        td a {
+            word-break: break-all;
+        }
+
+        .status-info-container {
+            padding: 1rem;
+            background: var(--background-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .status-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .status-item .label {
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .status-item span:not(.label) {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Add/modify these styles for tab visibility */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background-color: white;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+
+        select:hover {
+            border-color: var(--primary-color);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        select option {
+            padding: 0.75rem;
+            background-color: white;
+            color: var(--text-primary);
+        }
+
+        select option:disabled {
+            color: var(--text-secondary);
+            background-color: #f1f1f1;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        <h1>Auto Eval Dashboard</h1>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="card">
+            <h2>Robots Live Feed</h2>
+            <div class="info-message" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #2563eb; border-radius: 4px;">
+                <p style="margin: 0; color: #4b5563;">This shows real-time footage of the robots running the current evaluation job (which could be yours or someone else's). Be aware that the image may sometimes lag.</p>
+            </div>
+            <div class="video-feeds-wrapper" id="video-feeds-container">
+            </div>
+        </div>
+
+        <!-- Jobs dashboard content follows -->
+            <div class="card">
+                <h2>Submit New Job</h2>
+                <form id="jobForm">
+                    <div class="form-group">
+                        <label for="description">Job Description</label>
+                        <input type="text" id="description" name="description" required placeholder="Enter job description">
+                    </div>
+                    <div class="form-group">
+                        <label for="robot">Robot</label>
+                        <div style="display: flex; align-items: center;">
+                            <select id="robot" name="robot" required>
+                                <option value="">Select a robot</option>
+                                <option value="widowx_drawer">WidowX Drawer</option>
+                                <option value="widowx_sink">WidowX Sink</option>
+                            </select>
+                            <span id="robot-status-indicator" class="robot-status"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="task">Task</label>
+                        <select id="task" name="task" required>
+                            <option value="">Select a robot first</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="policy_server_ip">Policy Server IP</label>
+                        <input type="text" id="policy_server_ip" required placeholder="Enter policy server IP (e.g. bore.pub)" onchange="processPolicyServerIP(this)">
+                        <input type="hidden" id="policy_server_ip_actual" name="policy_server_ip">
+                        <script>
+                            function processPolicyServerIP(input) {
+                                let value = decodeURIComponent(input.value).trim();
+                                if (value === "bore.pub") {
+                                    document.getElementById('policy_server_ip_actual').value = "159.223.171.199";
+                                } else {
+                                    document.getElementById('policy_server_ip_actual').value = value;
+                                }
+                            }
+                        </script>
+                    </div>
+                    <div class="form-group">
+                        <label for="policy_server_port">Policy Server Port</label>
+                        <input type="number" id="policy_server_port" name="policy_server_port" required placeholder="Enter policy server port">
+                    </div>
+                    <div class="info-message" style="margin-top: 10px; margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #4285f4; font-size: 0.9rem;">
+                        <strong>Note:</strong> Your policy server must respond to POST requests at <code>/act</code> endpoint and return an action with shape <code>(7,)</code>.
+                        The server will be automatically tested as you submit your job.
+                    </div>
+                    <div class="info-message" style="margin-top: 10px; margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #4285f4; font-size: 0.9rem;">
+                        <strong>Note:</strong> Evaluation Reports are currently unavailable for anonymity.
+                    </div>
+                    <div id="robot-status-note" class="info-message" style="margin-bottom: 20px; padding: 10px; background-color: #fff5f5; border-left: 4px solid #dc2626; font-size: 0.9rem; display: none;"></div>
+                    <div class="form-group">
+                    <button type="button" id="advancedOptionsBtn" onclick="toggleAdvancedOptions()">Advanced Options (click to expand ⬇️)</button>
+                </div>
+                <div id="advancedOptionsSection" class="advanced-options">
+                    <div class="form-group">
+                        <label for="num_episodes">Number of Evaluation Episodes:</label>
+                        <input type="number" id="num_episodes" value="10" min="1" max="50" onchange="validateEpisodes(this)">
+                        <div id="episodes-error" class="error-message" style="display: none; color: red; font-size: 0.8rem; margin-top: 0.25rem;">Number of episodes must be between 1 and 50.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="max_steps">Evaluation Steps per Episode:</label>
+                        <input type="number" id="max_steps" value="70" min="1">
+                    </div>
+                </div>
+                <button type="submit" id="submitJobBtn">Submit Job</button>
+                <div id="loadingIndicator" style="display: none; margin-top: 10px;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 2s linear infinite; margin-right: 10px;"></div>
+                        <span id="loadingText">Testing policy server connection...</span>
+                    </div>
+                </div>
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Job Status</h2>
+                <div class="form-group">
+                    <input type="text" id="jobId" placeholder="Enter Job ID">
+                    <button onclick="getJobStatus()" style="margin-top: 1rem;">Check Status</button>
+                </div>
+                <p id="jobStatus" style="margin-top: 1rem;"></p>
+            </div>
+
+            <div class="card">
+                <h2>Cancel Job</h2>
+                <div class="form-group">
+                    <input type="text" id="cancelJobId" placeholder="Enter Job ID to Cancel">
+                    <button onclick="cancelJob()" style="margin-top: 1rem; background-color: var(--error-color);">Cancel Job</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>Your Jobs</h2>
+                    <button onclick="getJobsList()">Refresh Job Status</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Robot</th>
+                            <th>Task</th>
+                            <th>Status</th>
+                            <th>Wandb URL</th>
+                            <th>Success Rate</th>
+                            <th>Executed At</th>
+                            <th>Completed At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yourJobsList">
+                    </tbody>
+                </table>
+                <div id="yourJobsPagination" class="pagination-controls" style="text-align: center; margin-top: 0.5rem;"></div>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2>All Jobs</h2>
+                    <button onclick="getJobsList()">Refresh Job Status</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Robot</th>
+                            <th>Task</th>
+                            <th>Status</th>
+                            <th>Wandb URL</th>
+                            <th>Success Rate</th>
+                            <th>Executed At</th>
+                            <th>Completed At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobsList">
+                    </tbody>
+                </table>
+                <div id="jobsPagination" class="pagination-controls" style="text-align: center; margin-top: 0.5rem;"></div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        // Task options for each robot
+        const robotTasks = {
+            'widowx_drawer': [
+                { value: 'open_drawer', label: 'Open the drawer' },
+                { value: 'close_drawer', label: 'Close the drawer' }
+            ],
+            'widowx_sink': [
+                { value: 'put_eggplant_blue_sink', label: 'Put the eggplant into the blue sink' },
+                { value: 'put_eggplant_yellow_basket', label: 'Put the eggplant into the yellow basket' }
+            ]
+        };
+
+        function toggleAdvancedOptions() {
+            const advancedSection = document.getElementById('advancedOptionsSection');
+            advancedSection.classList.toggle('show');
+        }
+
+        function updateMaxSteps() {
+            const robotSelect = document.getElementById('robot');
+            const maxStepsInput = document.getElementById('max_steps');
+
+            console.log('Updating max steps for robot:', robotSelect.value);
+
+            if (robotSelect.value === 'sink') {
+                console.log('Setting max steps to 100 for sink');
+                maxStepsInput.value = '100';
+            } else if (robotSelect.value === 'drawer') {
+                console.log('Setting max steps to 70 for drawer');
+                maxStepsInput.value = '70';
+            }
+            console.log('Current max steps value:', maxStepsInput.value);
+        }
+
+        function updateTaskOptions() {
+            const robotSelect = document.getElementById('robot');
+            const taskSelect = document.getElementById('task');
+            const selectedRobot = robotSelect.value;
+
+            // Clear existing options
+            taskSelect.innerHTML = '';
+
+            if (!selectedRobot) {
+                taskSelect.innerHTML = '<option value="">Select a robot first</option>';
+                return;
+            }
+
+            // Add new options based on selected robot
+            const tasks = robotTasks[selectedRobot];
+            tasks.forEach(task => {
+                const option = document.createElement('option');
+                option.value = task.value;
+                option.textContent = task.label;
+                taskSelect.appendChild(option);
+            });
+        }
+
+        document.getElementById('jobForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const description = document.getElementById('description').value;
+            const num_episodes = document.getElementById('num_episodes').value;
+            const max_steps = document.getElementById('max_steps').value;
+            const robot = document.getElementById('robot').value;
+            const task = document.getElementById('task').value;
+            const policy_server_ip = document.getElementById('policy_server_ip_actual').value;
+            const policy_server_port = document.getElementById('policy_server_port').value;
+            const submitter_id = getOrCreateSubmitterId();
+
+            // Show loading indicator for testing policy server connection
+            document.getElementById('submitJobBtn').disabled = true;
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('loadingText').textContent = 'Testing policy server connection...';
+
+            console.log('Testing policy server connection...');
+
+            // First, test the policy server connection
+            // Create an AbortController with a timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);  // 10 second timeout
+
+            fetch('/test_policy_server/', {
+                signal: controller.signal,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    policy_server_ip: policy_server_ip,
+                    policy_server_port: parseInt(policy_server_port)
+                })
+            }).then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || 'Failed to connect to policy server');
+                    }).catch(e => {
+                        if (e.message && e.message !== 'Failed to connect to policy server') {
+                            throw e;
+                        } else {
+                            throw new Error(`Failed to connect to policy server (HTTP ${response.status})`);
+                        }
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'error') {
+                    if (data.message.includes('unexpected shape')) {
+                        throw new Error(`The policy server must return action of shape (7,), but instead got ${data.shape}`);
+                    } else {
+                        throw new Error(data.message);
+                    }
+                }
+
+                console.log('Policy server test successful:', data);
+                // Update loading text
+                document.getElementById('loadingText').textContent = 'Policy server test successful. Submitting job...';
+
+                console.log('Submitting job with data:', {
+                    description,
+                    robot,
+                    task,
+                    policy_server_ip,
+                    policy_server_port,
+                    num_episodes,
+                    max_steps,
+                    submitter_id
+                });
+
+                // Clear the timeout since we succeeded
+                clearTimeout(timeoutId);
+
+                // If policy server test is successful, submit the job
+                return fetch('/jobs/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        description: description,
+                        robot: robot,
+                        task: task,
+                        policy_server_ip: policy_server_ip,
+                        policy_server_port: parseInt(policy_server_port),
+                        num_episodes: parseInt(num_episodes),
+                        max_steps: parseInt(max_steps),
+                        submitter_id: submitter_id
+                    })
+                });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Network response was not ok:', response);
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Hide loading indicator
+                document.getElementById('submitJobBtn').disabled = false;
+                document.getElementById('loadingIndicator').style.display = 'none';
+
+                alert('Job submitted! Job ID: ' + data.job_id);
+                getJobsList();
+                fetchRobotStatus(); // Refresh robot status after job submission
+            })
+            .catch(error => {
+                // Hide loading indicator
+                document.getElementById('submitJobBtn').disabled = false;
+                document.getElementById('loadingIndicator').style.display = 'none';
+
+                // Clear the timeout
+                clearTimeout(timeoutId);
+
+                console.error('Error:', error);
+                if (error.name === 'AbortError') {
+                    alert('Error: Policy server connection timed out after 10 seconds. Please check if the server is running and accessible.');
+                } else if (error.message.includes('Failed to fetch')) {
+                    alert('Error: Could not connect to the server. Please check your network connection and ensure the policy server is running.');
+                } else if (error.message.includes('NetworkError')) {
+                    alert('Error: Network error when trying to connect to policy server. This could be due to CORS issues or the server being unreachable.');
+                } else {
+                    alert('Error: ' + error.message);
+                }
+            });
+        });
+
+        function getJobStatus() {
+            const jobId = document.getElementById('jobId').value;
+            fetch('/jobs/' + jobId)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('jobStatus').innerText = 'Status: ' + data.status;
+                })
+                .catch(error => {
+                    document.getElementById('jobStatus').innerText = 'Error retrieving job status: ' + error;
+                });
+        }
+
+        function cancelJob() {
+            const jobId = document.getElementById('cancelJobId').value;
+            if (!jobId) {
+                alert('Please enter a Job ID');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to cancel this job? This action cannot be undone.')) {
+                return;
+            }
+
+            const submitter_id = getOrCreateSubmitterId();
+            fetch(`/jobs/${jobId}/cancel?submitter_id=${submitter_id}`, {
+                method: 'POST',
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to cancel job');
+                }
+                return data;
+            })
+            .then(data => {
+                alert(data.message);
+                document.getElementById('cancelJobId').value = ''; // Clear the input
+                getJobsList(); // Refresh the jobs list
+            })
+            .catch(error => {
+                alert('Error cancelling job: ' + error.message);
+            });
+        }
+
+        function getJobsList() {
+            const submitter_id = getOrCreateSubmitterId();
+            fetch('/jobs/')
+                .then(response => response.json())
+                .then(data => {
+                    // Mark jobs that belong to the current user
+                    data.forEach(job => {
+                        job.isOwnJob = job.submitter_id === submitter_id;
+                    });
+                    const list = document.getElementById('jobsList');
+                    list.innerHTML = '';
+                    // Clear both tables
+                    list.innerHTML = '';
+                    document.getElementById('yourJobsList').innerHTML = '';
+
+                    data.forEach(job => {
+                        const row = document.createElement('tr');
+                        const jobHtml = `
+                            <td>${job.id}</td>
+                            <td>${job.robot}</td>
+                            <td>${job.task}</td>
+                            <td>${job.status}</td>
+                            <td>currently disabled</td>
+                            <td>${job.success_rate === null || job.success_rate === undefined ? 'N/A' : `${(job.success_rate * 100).toFixed(2)}%`}</td>
+                            <td>${job.executed_at ? new Date(job.executed_at * 1000).toLocaleString() : 'N/A'}</td>
+                            <td>${job.completed_at ? new Date(job.completed_at * 1000).toLocaleString() : 'N/A'}</td>`;
+                        row.innerHTML = jobHtml;
+                        list.appendChild(row);
+
+                        // If it's the user's job, add it to the your jobs list
+                        if (job.isOwnJob) {
+                            const yourJobsRow = document.createElement('tr');
+                            yourJobsRow.innerHTML = jobHtml;
+                            document.getElementById('yourJobsList').appendChild(yourJobsRow);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error retrieving jobs list:', error);
+                });
+        }
+
+        const NUM_FEEDS = 2;
+
+        function fetchAndDisplayImage(feedId, imageType) {
+            const imgElement = document.getElementById(`${feedId}-${imageType}-img`);
+            console.log(`Fetching image for feed ${feedId} (${imageType})...`);
+
+            // Add cache-busting timestamp parameter to prevent browser caching
+            const timestamp = new Date().getTime();
+            fetch(`/images/${feedId}/${imageType}?t=${timestamp}`)
+                .then(response => {
+                    console.log(`Response for feed ${feedId}: status=${response.status}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.blob();
+                })
+                .then(imageBlob => {
+                    console.log(`Successfully loaded image for feed ${feedId}, size: ${imageBlob.size} bytes`);
+                    const imageUrl = URL.createObjectURL(imageBlob);
+
+                    // Revoke the old object URL to prevent memory leaks
+                    if (imgElement.src && imgElement.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(imgElement.src);
+                    }
+
+                    imgElement.src = imageUrl;
+                })
+                .catch(error => {
+                    console.error(`Error fetching ${feedId}-${imageType} image:`, error);
+                });
+        }
+
+        function fetchStatus(feedId) {
+            fetch(`/get_status_data/${feedId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById(`${feedId}-language-instruction`).textContent = data.language_instruction;
+                    document.getElementById(`${feedId}-episode`).textContent = data.episode;
+                    document.getElementById(`${feedId}-timestep`).textContent = data.timestep;
+
+                    // Handle waiting for human intervention message
+                    const waitingMessage = document.getElementById(`${feedId}-waiting-message`);
+                    if (waitingMessage) {
+                        if (data.waiting_for_human) {
+                            waitingMessage.style.display = 'flex';
+                        } else {
+                            waitingMessage.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => console.error(`Error fetching status for ${feedId}:`, error));
+        }
+
+        function createVideoFeedPairHtml(feedId) {
+            const feedNames = ["WidowX Drawer", "WidowX Sink"];
+            return `
+                <div class="video-feed-pair">
+                    <div class="feed-header"> #${parseInt(feedId) + 1} ${feedNames[feedId]}</div>
+                    <div class="video-feed-container">
+                        <div class="video-feed">
+                            <img src="" alt="Observation Feed" id="${feedId}-observation-img">
+                            <div class="timestamp-overlay" id="${feedId}-timestamp"></div>
+                            <div id="${feedId}-waiting-message" class="waiting-message" style="display: none;">
+                                <div class="waiting-message-content">
+                                    <h3>⚠️ Awaiting Human Intervention</h3>
+                                    <p>The robot is waiting for human intervention to continue.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="status-info-container">
+                        <div class="status-info">
+                            <div class="status-item">
+                                <span class="label">Language Instruction</span>
+                                <span id="${feedId}-language-instruction">N/A</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label"># Episode</span>
+                                <span id="${feedId}-episode">0</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">Timestep</span>
+                                <span id="${feedId}-timestep">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function initializeVideoFeeds() {
+            const container = document.getElementById("video-feeds-container");
+            for(let i = 0; i < NUM_FEEDS; i++) {
+                const feedId = `${i}`;
+                container.innerHTML += createVideoFeedPairHtml(feedId);
+            }
+        }
+
+        function updateAllFeeds() {
+            for(let i = 0; i < NUM_FEEDS; i++) {
+                const feedId = `${i}`;
+                fetchAndDisplayImage(feedId, 'observation');
+                fetchStatus(feedId);
+                updateTimestamp(feedId);
+            }
+        }
+
+        function updateTimestamp(feedId) {
+            const timestampElement = document.getElementById(`${feedId}-timestamp`);
+            if (timestampElement) {
+                const now = new Date();
+                const options = {
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZoneName: 'short'
+                };
+                timestampElement.textContent = now.toLocaleDateString('en-US', options);
+            }
+        }
+
+        function validateEpisodes(input) {
+            const errorElement = document.getElementById('episodes-error');
+            const value = parseInt(input.value);
+
+            if (value > 50) {
+                errorElement.style.display = 'block';
+                input.value = 50; // Reset to maximum allowed value
+            } else if (value < 1) {
+                errorElement.style.display = 'block';
+                input.value = 1; // Reset to minimum allowed value
+            } else {
+                errorElement.style.display = 'none';
+            }
+        }
+
+        // Initialize everything when document is ready
+        // Function to generate a random submitter ID if one doesn't exist
+        function getOrCreateSubmitterId() {
+            let submitterId = localStorage.getItem('submitterId');
+            if (!submitterId) {
+                submitterId = 'user_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('submitterId', submitterId);
+            }
+            return submitterId;
+        }
+
+        // Function to fetch and display robot status
+        function fetchRobotStatus() {
+            fetch('/robot_status/')
+                .then(response => response.json())
+                .then(statuses => {
+                    // Store statuses globally
+                    window.robotStatuses = {};
+                    statuses.forEach(status => {
+                        window.robotStatuses[status.robot] = status;
+                    });
+
+                    // Update the robot dropdown to disable offline robots
+                    updateRobotDropdown();
+
+                    // Update the current robot status display if a robot is selected
+                    updateRobotStatusDisplay();
+                })
+                .catch(error => {
+                    console.error('Error fetching robot status:', error);
+                });
+        }
+
+        // Function to update the robot dropdown options based on robot status
+        function updateRobotDropdown() {
+            if (!window.robotStatuses) return;
+
+            const robotSelect = document.getElementById('robot');
+            const currentValue = robotSelect.value;
+
+            // Update options based on robot status
+            for (let i = 0; i < robotSelect.options.length; i++) {
+                const option = robotSelect.options[i];
+                const robotValue = option.value;
+
+                // Skip the empty option
+                if (!robotValue) continue;
+
+                const status = window.robotStatuses[robotValue];
+                if (status && !status.is_online) {
+                    // Mark offline robots as disabled and add (OFFLINE) to their name
+                    option.disabled = true;
+
+                    // Only add (OFFLINE) if it's not already there
+                    if (!option.text.includes('(OFFLINE)')) {
+                        option.text = `${option.text} (OFFLINE)`;
+                    }
+
+                    // If the currently selected robot is now offline, select the empty option
+                    if (currentValue === robotValue) {
+                        robotSelect.value = '';
+                    }
+                } else if (status && status.is_online) {
+                    // Make sure online robots are enabled and don't have (OFFLINE) label
+                    option.disabled = false;
+                    option.text = option.text.replace(' (OFFLINE)', '');
+                }
+            }
+
+            // Update the robot status note at the bottom of the form
+            updateRobotStatusNote();
+        }
+
+        // Function to update the robot status note at the bottom of the form
+        function updateRobotStatusNote() {
+            const robotStatusNote = document.getElementById('robot-status-note');
+            const offlineRobots = [];
+
+            // Check if any robots are offline
+            if (window.robotStatuses) {
+                for (const [robot, status] of Object.entries(window.robotStatuses)) {
+                    if (!status.is_online) {
+                        // Get the display name for the robot
+                        let displayName = robot;
+                        const robotSelect = document.getElementById('robot');
+                        for (let i = 0; i < robotSelect.options.length; i++) {
+                            if (robotSelect.options[i].value === robot) {
+                                displayName = robotSelect.options[i].text.replace(' (OFFLINE)', '');
+                                break;
+                            }
+                        }
+
+                        offlineRobots.push({
+                            name: displayName,
+                            message: status.offline_message || 'This robot is currently offline and not accepting jobs.'
+                        });
+                    }
+                }
+            }
+
+            // Update the note content
+            if (offlineRobots.length > 0) {
+                let noteContent = '<strong>Note:</strong> The following robots are currently offline:<div style="margin-top: 5px;">';
+                offlineRobots.forEach(robot => {
+                    noteContent += `<div style="margin-bottom: 5px;"><strong>${robot.name}:</strong> ${robot.message}</div>`;
+                });
+                noteContent += '</div>';
+
+                robotStatusNote.innerHTML = noteContent;
+                robotStatusNote.style.display = 'block';
+            } else {
+                robotStatusNote.style.display = 'none';
+            }
+        }
+
+        // Function to update robot status display based on selected robot
+        function updateRobotStatusDisplay() {
+            const robotSelect = document.getElementById('robot');
+            const selectedRobot = robotSelect.value;
+            const statusIndicator = document.getElementById('robot-status-indicator');
+            const offlineMessage = document.getElementById('offline-message');
+
+            if (!selectedRobot || !window.robotStatuses) {
+                statusIndicator.style.display = 'none';
+                offlineMessage.style.display = 'none';
+                return;
+            }
+
+            const robotStatus = window.robotStatuses[selectedRobot];
+            if (!robotStatus) {
+                statusIndicator.style.display = 'none';
+                offlineMessage.style.display = 'none';
+                return;
+            }
+
+            statusIndicator.style.display = 'inline-block';
+            if (robotStatus.is_online) {
+                statusIndicator.textContent = 'Online';
+                statusIndicator.className = 'robot-status status-online';
+                offlineMessage.style.display = 'none';
+                document.getElementById('submitJobBtn').disabled = false;
+            } else {
+                statusIndicator.textContent = 'Offline';
+                statusIndicator.className = 'robot-status status-offline';
+                offlineMessage.textContent = robotStatus.offline_message || 'This robot is currently offline and not accepting jobs.';
+                offlineMessage.style.display = 'block';
+                document.getElementById('submitJobBtn').disabled = true;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log('DOM Content Loaded');
+            // Fetch robot status when page loads
+            fetchRobotStatus();
+
+            // Set up robot selection change handler
+            const robotSelect = document.getElementById('robot');
+            console.log('Robot select element:', robotSelect);
+
+            robotSelect.addEventListener('change', function(event) {
+                const selectedValue = event.target.value;
+                console.log('Robot selection changed to:', selectedValue);
+                if (selectedValue === 'widowx_sink') {
+                    document.getElementById('max_steps').value = '100';
+                } else if (selectedValue === 'widowx_drawer') {
+                    document.getElementById('max_steps').value = '70';
+                }
+                updateTaskOptions();
+            });
+
+            // Initialize video feeds and job list
+            initializeVideoFeeds();
+            getJobsList();
+            // Update all feeds including timestamps every second
+            setInterval(updateAllFeeds, 1000);
+            // Also update timestamps immediately
+            for(let i = 0; i < NUM_FEEDS; i++) {
+                updateTimestamp(`${i}`);
+            }
+        });
+    </script>
+
+    <script>
+        // Pagination logic
+        function paginateTable(tbodyId, paginationDivId, itemsPerPage) {
+            var tbody = document.getElementById(tbodyId);
+            if (!tbody) return;
+            var rows = tbody.getElementsByTagName('tr');
+            var totalItems = rows.length;
+            var totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+            var currentPage = 1;
+
+            function renderPage() {
+                for (var i = 0; i < rows.length; i++) {
+                    rows[i].style.display = (i >= (currentPage - 1) * itemsPerPage && i < currentPage * itemsPerPage) ? '' : 'none';
+                }
+                var paginationDiv = document.getElementById(paginationDivId);
+                paginationDiv.innerHTML = '<button id="' + tbodyId + '_prev">Previous</button> Page ' + currentPage + ' of ' + totalPages + ' <button id="' + tbodyId + '_next">Next</button>';
+                document.getElementById(tbodyId + '_prev').disabled = (currentPage === 1);
+                document.getElementById(tbodyId + '_next').disabled = (currentPage === totalPages);
+
+                document.getElementById(tbodyId + '_prev').onclick = function(){
+                    if(currentPage > 1){
+                        currentPage--;
+                        renderPage();
+                    }
+                };
+                document.getElementById(tbodyId + '_next').onclick = function(){
+                    if(currentPage < totalPages){
+                        currentPage++;
+                        renderPage();
+                    }
+                };
+            }
+            renderPage();
+        }
+
+        // Wrap the original getJobsList function to update pagination after table refresh
+        if (typeof getJobsList === 'function') {
+            var originalGetJobsList = getJobsList;
+            getJobsList = function(){
+                // Store the original fetch implementation
+                const originalFetch = window.fetch;
+
+                // Override fetch to intercept the jobs API call
+                window.fetch = function(url, options) {
+                    const fetchPromise = originalFetch(url, options);
+
+                    // If this is the jobs API call
+                    if (url === '/jobs/') {
+                        // After the data is processed and tables are updated
+                        fetchPromise.then(response => {
+                            response.clone().json().then(() => {
+                                // Use a MutationObserver to detect when the table is updated
+                                const jobsListObserver = new MutationObserver((mutations, observer) => {
+                                    // Apply pagination after table content changes
+                                    paginateTable('yourJobsList', 'yourJobsPagination', 7);
+                                    paginateTable('jobsList', 'jobsPagination', 7);
+                                    observer.disconnect(); // Stop observing once pagination is applied
+                                });
+
+                                // Start observing both tables for changes
+                                jobsListObserver.observe(document.getElementById('jobsList'), { childList: true });
+                                jobsListObserver.observe(document.getElementById('yourJobsList'), { childList: true });
+                            });
+                        });
+                    }
+
+                    return fetchPromise;
+                };
+
+                // Call the original function
+                originalGetJobsList();
+
+                // Restore the original fetch
+                window.fetch = originalFetch;
+            };
+        }
+    </script>
+</body>
+</html>

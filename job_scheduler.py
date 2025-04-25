@@ -217,6 +217,9 @@ def verify_api_key(api_key: str = Security(api_key_header)):
 
 # Serve the static files
 app.mount("/page", StaticFiles(directory="static", html=True), name="static")
+app.mount(
+    "/submission", StaticFiles(directory="static_simplify", html=True), name="static"
+)
 
 
 # Show the tmux output of a job
