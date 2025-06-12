@@ -142,13 +142,17 @@ class Job(SQLModel, table=True):
     max_steps: Optional[int] = Field(default=70)
     type: str = "policy_server"
     status: str = Status.QUEUED
-    submitted_at: float = Field(default_factory=time.time)
+    submitted_at: float = Field(
+        default_factory=time.time, index=True
+    )  # Add index for ordering
     executed_at: Optional[float] = Field(default=None, nullable=True)
     completed_at: Optional[float] = Field(default=None, nullable=True)
     tmux_output: Optional[str] = Field(default=None, nullable=True)
     wandb_url: Optional[str] = Field(default=None, nullable=True)
     success_rate: Optional[float] = Field(default=None, nullable=True)
-    submitter_id: Optional[str] = Field(default=None, nullable=True)
+    submitter_id: Optional[str] = Field(
+        default=None, nullable=True, index=True
+    )  # Add index for filtering
 
 
 # Queue Model
@@ -574,12 +578,52 @@ def admin_cancel_job(job_id: str, api_key: str = Depends(verify_api_key)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Endpoint to get a list of all jobs
+# Endpoint to get a list of all jobs with pagination
 @app.get("/jobs/")
-def get_jobs():
+def get_jobs(
+    page: int = 1,
+    limit: int = 50,
+    submitter_id: Optional[str] = None,
+    own_only: bool = False,
+):
     with Session(engine) as session:
-        jobs = session.exec(select(Job).order_by(Job.submitted_at.desc())).all()
-        return jobs
+        # Calculate offset
+        offset = (page - 1) * limit
+
+        # Build query
+        query = select(Job).order_by(Job.submitted_at.desc())
+
+        # Filter by submitter if requested
+        if own_only and submitter_id:
+            query = query.where(Job.submitter_id == submitter_id)
+
+        # Get total count for pagination info (more efficient than loading all records)
+        from sqlmodel import func
+
+        if own_only and submitter_id:
+            total_jobs = session.exec(
+                select(func.count(Job.id)).where(Job.submitter_id == submitter_id)
+            ).one()
+        else:
+            total_jobs = session.exec(select(func.count(Job.id))).one()
+
+        # Apply pagination
+        jobs = session.exec(query.offset(offset).limit(limit)).all()
+
+        # Calculate pagination info
+        total_pages = (total_jobs + limit - 1) // limit  # Ceiling division
+
+        return {
+            "jobs": jobs,
+            "pagination": {
+                "current_page": page,
+                "total_pages": total_pages,
+                "total_jobs": total_jobs,
+                "limit": limit,
+                "has_next": page < total_pages,
+                "has_prev": page > 1,
+            },
+        }
 
 
 # Endpoint to get robot status
