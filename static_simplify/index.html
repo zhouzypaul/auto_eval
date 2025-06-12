@@ -547,6 +547,10 @@
                     <tbody id="yourJobsList">
                     </tbody>
                 </table>
+                <div id="yourJobsLoading" class="loading-indicator" style="display: none; text-align: center; padding: 1rem;">
+                    <div style="display: inline-block; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 2s linear infinite; margin-right: 10px;"></div>
+                    Loading your jobs...
+                </div>
                 <div id="yourJobsPagination" class="pagination-controls" style="text-align: center; margin-top: 0.5rem;"></div>
             </div>
 
@@ -571,6 +575,10 @@
                     <tbody id="jobsList">
                     </tbody>
                 </table>
+                <div id="allJobsLoading" class="loading-indicator" style="display: none; text-align: center; padding: 1rem;">
+                    <div style="display: inline-block; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 2s linear infinite; margin-right: 10px;"></div>
+                    Loading all jobs...
+                </div>
                 <div id="jobsPagination" class="pagination-controls" style="text-align: center; margin-top: 0.5rem;"></div>
             </div>
         </div>
@@ -807,22 +815,34 @@
             });
         }
 
+        // Pagination state
+        let currentAllJobsPage = 1;
+        let currentYourJobsPage = 1;
+        const jobsPerPage = 7;
+
         function getJobsList() {
+            getYourJobs();
+            getAllJobs();
+        }
+
+        function getYourJobs(page = 1) {
             const submitter_id = getOrCreateSubmitterId();
-            fetch('/jobs/')
+            currentYourJobsPage = page;
+
+            // Show loading indicator
+            document.getElementById('yourJobsLoading').style.display = 'block';
+            document.getElementById('yourJobsList').style.display = 'none';
+
+            fetch(`/jobs/?page=${page}&limit=${jobsPerPage}&submitter_id=${submitter_id}&own_only=true`)
                 .then(response => response.json())
                 .then(data => {
-                    // Mark jobs that belong to the current user
-                    data.forEach(job => {
-                        job.isOwnJob = job.submitter_id === submitter_id;
-                    });
-                    const list = document.getElementById('jobsList');
+                    // Hide loading indicator
+                    document.getElementById('yourJobsLoading').style.display = 'none';
+                    document.getElementById('yourJobsList').style.display = 'table-row-group';
+                    const list = document.getElementById('yourJobsList');
                     list.innerHTML = '';
-                    // Clear both tables
-                    list.innerHTML = '';
-                    document.getElementById('yourJobsList').innerHTML = '';
 
-                    data.forEach(job => {
+                    data.jobs.forEach(job => {
                         const row = document.createElement('tr');
                         const jobHtml = `
                             <td>${job.id}</td>
@@ -835,18 +855,85 @@
                             <td>${job.completed_at ? new Date(job.completed_at * 1000).toLocaleString() : 'N/A'}</td>`;
                         row.innerHTML = jobHtml;
                         list.appendChild(row);
-
-                        // If it's the user's job, add it to the your jobs list
-                        if (job.isOwnJob) {
-                            const yourJobsRow = document.createElement('tr');
-                            yourJobsRow.innerHTML = jobHtml;
-                            document.getElementById('yourJobsList').appendChild(yourJobsRow);
-                        }
                     });
+
+                    // Update pagination controls for your jobs
+                    updatePaginationControls('yourJobsPagination', data.pagination, getYourJobs);
                 })
                 .catch(error => {
-                    console.error('Error retrieving jobs list:', error);
+                    // Hide loading indicator on error
+                    document.getElementById('yourJobsLoading').style.display = 'none';
+                    document.getElementById('yourJobsList').style.display = 'table-row-group';
+                    console.error('Error retrieving your jobs list:', error);
                 });
+        }
+
+        function getAllJobs(page = 1) {
+            currentAllJobsPage = page;
+
+            // Show loading indicator
+            document.getElementById('allJobsLoading').style.display = 'block';
+            document.getElementById('jobsList').style.display = 'none';
+
+            fetch(`/jobs/?page=${page}&limit=${jobsPerPage}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading indicator
+                    document.getElementById('allJobsLoading').style.display = 'none';
+                    document.getElementById('jobsList').style.display = 'table-row-group';
+                    const list = document.getElementById('jobsList');
+                    list.innerHTML = '';
+
+                    data.jobs.forEach(job => {
+                        const row = document.createElement('tr');
+                        const jobHtml = `
+                            <td>${job.id}</td>
+                            <td>${job.robot}</td>
+                            <td>${job.task}</td>
+                            <td>${job.status}</td>
+                            <td>currently disabled</td>
+                            <td>${job.success_rate === null || job.success_rate === undefined ? 'N/A' : `${(job.success_rate * 100).toFixed(2)}%`}</td>
+                            <td>${job.executed_at ? new Date(job.executed_at * 1000).toLocaleString() : 'N/A'}</td>
+                            <td>${job.completed_at ? new Date(job.completed_at * 1000).toLocaleString() : 'N/A'}</td>`;
+                        row.innerHTML = jobHtml;
+                        list.appendChild(row);
+                    });
+
+                    // Update pagination controls for all jobs
+                    updatePaginationControls('jobsPagination', data.pagination, getAllJobs);
+                })
+                .catch(error => {
+                    // Hide loading indicator on error
+                    document.getElementById('allJobsLoading').style.display = 'none';
+                    document.getElementById('jobsList').style.display = 'table-row-group';
+                    console.error('Error retrieving all jobs list:', error);
+                });
+        }
+
+        function updatePaginationControls(paginationId, pagination, fetchFunction) {
+            const paginationDiv = document.getElementById(paginationId);
+            if (!paginationDiv || !pagination) return;
+
+            let controls = '';
+
+            // Previous button
+            if (pagination.has_prev) {
+                controls += `<button onclick="${fetchFunction.name}(${pagination.current_page - 1})" style="margin: 0 0.5rem;">← Previous</button>`;
+            } else {
+                controls += `<button disabled style="margin: 0 0.5rem; opacity: 0.5;">← Previous</button>`;
+            }
+
+            // Page info
+            controls += `<span style="margin: 0 1rem;">Page ${pagination.current_page} of ${pagination.total_pages} (${pagination.total_jobs} total jobs)</span>`;
+
+            // Next button
+            if (pagination.has_next) {
+                controls += `<button onclick="${fetchFunction.name}(${pagination.current_page + 1})" style="margin: 0 0.5rem;">Next →</button>`;
+            } else {
+                controls += `<button disabled style="margin: 0 0.5rem; opacity: 0.5;">Next →</button>`;
+            }
+
+            paginationDiv.innerHTML = controls;
         }
 
         const NUM_FEEDS = 2;
@@ -1167,84 +1254,6 @@
                 updateTimestamp(`${i}`);
             }
         });
-    </script>
-
-    <script>
-        // Pagination logic
-        function paginateTable(tbodyId, paginationDivId, itemsPerPage) {
-            var tbody = document.getElementById(tbodyId);
-            if (!tbody) return;
-            var rows = tbody.getElementsByTagName('tr');
-            var totalItems = rows.length;
-            var totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-            var currentPage = 1;
-
-            function renderPage() {
-                for (var i = 0; i < rows.length; i++) {
-                    rows[i].style.display = (i >= (currentPage - 1) * itemsPerPage && i < currentPage * itemsPerPage) ? '' : 'none';
-                }
-                var paginationDiv = document.getElementById(paginationDivId);
-                paginationDiv.innerHTML = '<button id="' + tbodyId + '_prev">Previous</button> Page ' + currentPage + ' of ' + totalPages + ' <button id="' + tbodyId + '_next">Next</button>';
-                document.getElementById(tbodyId + '_prev').disabled = (currentPage === 1);
-                document.getElementById(tbodyId + '_next').disabled = (currentPage === totalPages);
-
-                document.getElementById(tbodyId + '_prev').onclick = function(){
-                    if(currentPage > 1){
-                        currentPage--;
-                        renderPage();
-                    }
-                };
-                document.getElementById(tbodyId + '_next').onclick = function(){
-                    if(currentPage < totalPages){
-                        currentPage++;
-                        renderPage();
-                    }
-                };
-            }
-            renderPage();
-        }
-
-        // Wrap the original getJobsList function to update pagination after table refresh
-        if (typeof getJobsList === 'function') {
-            var originalGetJobsList = getJobsList;
-            getJobsList = function(){
-                // Store the original fetch implementation
-                const originalFetch = window.fetch;
-
-                // Override fetch to intercept the jobs API call
-                window.fetch = function(url, options) {
-                    const fetchPromise = originalFetch(url, options);
-
-                    // If this is the jobs API call
-                    if (url === '/jobs/') {
-                        // After the data is processed and tables are updated
-                        fetchPromise.then(response => {
-                            response.clone().json().then(() => {
-                                // Use a MutationObserver to detect when the table is updated
-                                const jobsListObserver = new MutationObserver((mutations, observer) => {
-                                    // Apply pagination after table content changes
-                                    paginateTable('yourJobsList', 'yourJobsPagination', 7);
-                                    paginateTable('jobsList', 'jobsPagination', 7);
-                                    observer.disconnect(); // Stop observing once pagination is applied
-                                });
-
-                                // Start observing both tables for changes
-                                jobsListObserver.observe(document.getElementById('jobsList'), { childList: true });
-                                jobsListObserver.observe(document.getElementById('yourJobsList'), { childList: true });
-                            });
-                        });
-                    }
-
-                    return fetchPromise;
-                };
-
-                // Call the original function
-                originalGetJobsList();
-
-                // Restore the original fetch
-                window.fetch = originalFetch;
-            };
-        }
     </script>
 </body>
 </html>
