@@ -587,31 +587,48 @@ def get_jobs(
     own_only: bool = False,
 ):
     with Session(engine) as session:
+        from sqlmodel import func
+
         # Calculate offset
         offset = (page - 1) * limit
 
-        # Build query
-        query = select(Job).order_by(Job.submitted_at.desc())
+        # --- Efficient Pagination using Deferred Join ---
 
-        # Filter by submitter if requested
-        if own_only and submitter_id:
-            query = query.where(Job.submitter_id == submitter_id)
-
-        # Get total count for pagination info (more efficient than loading all records)
-        from sqlmodel import func
+        # 1. Build the base queries for filtering.
+        id_query = select(Job.id)
+        count_query = select(func.count(Job.id))
 
         if own_only and submitter_id:
-            total_jobs = session.exec(
-                select(func.count(Job.id)).where(Job.submitter_id == submitter_id)
-            ).one()
-        else:
-            total_jobs = session.exec(select(func.count(Job.id))).one()
+            id_query = id_query.where(Job.submitter_id == submitter_id)
+            count_query = count_query.where(Job.submitter_id == submitter_id)
 
-        # Apply pagination
-        jobs = session.exec(query.offset(offset).limit(limit)).all()
+        # 2. Get total count for pagination info.
+        total_jobs = session.exec(count_query).one()
 
-        # Calculate pagination info
-        total_pages = (total_jobs + limit - 1) // limit  # Ceiling division
+        # 3. Create a subquery to fetch just the IDs for the desired page.
+        #    This is fast because it can use an index-only scan. A secondary
+        #    sort on the unique `id` field ensures a stable order.
+        paginated_ids_subquery = (
+            id_query.order_by(Job.submitted_at.desc(), Job.id.desc())
+            .limit(limit)
+            .offset(offset)
+            .subquery()
+        )
+
+        # 4. Join the full table against the small set of paginated IDs.
+        #    This avoids a slow, full-table offset scan.
+        final_query = (
+            select(Job)
+            .join(paginated_ids_subquery, Job.id == paginated_ids_subquery.c.id)
+            .order_by(
+                Job.submitted_at.desc(), Job.id.desc()
+            )  # Order must match the subquery
+        )
+
+        jobs = session.exec(final_query).all()
+
+        # 5. Calculate pagination metadata.
+        total_pages = (total_jobs + limit - 1) // limit if limit > 0 else 0
 
         return {
             "jobs": jobs,
