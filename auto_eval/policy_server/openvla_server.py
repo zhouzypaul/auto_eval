@@ -182,6 +182,12 @@ class OpenVLAServer:
         async def health_check():
             return {"status": "healthy"}
 
+        # Add dummy reset endpoint
+        @self.app.post("/reset")
+        async def reset_server():
+            pass
+            return {"status": "dummy reset successful"}
+
         self.app.post("/act")(self.predict_action)
 
         # Configure server with increased timeout and request size limits
@@ -190,7 +196,7 @@ class OpenVLAServer:
             host=host,
             port=port,
             timeout_keep_alive=120,
-            limit_concurrency=2,
+            limit_concurrency=4,
         )
         server = uvicorn.Server(config)
         server.run()

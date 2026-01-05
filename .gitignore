@@ -173,4 +173,5 @@ cython_debug/
 #.idea/
 
 database.db
+database_backup.db
 .vscode/
