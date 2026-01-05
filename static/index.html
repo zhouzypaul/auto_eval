@@ -472,7 +472,7 @@
                         <input type="number" id="policy_server_port" name="policy_server_port" required placeholder="Enter policy server port (use -1 if no port is needed)">
                     </div>
                     <div class="info-message" style="margin-top: 10px; margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #4285f4; font-size: 0.9rem;">
-                        <strong>Note:</strong> Your policy server must respond to POST requests at <code>/act</code> endpoint and return an action with shape <code>(7,)</code>.
+                        <strong>Note:</strong> See <a href="https://auto-eval.github.io" target="_blank">the AutoEval website</a> for detailed instructions. Your policy server must respond to POST requests at <code>/act</code> endpoint and return an action with shape <code>(7,)</code>.
                         The server will be automatically tested as you submit your job. See <a href="https://gist.github.com/zhouzypaul/8ba0123b2931a7295a00eaa09dd540cd" target="_blank">here</a> for an example policy server.
                         We recommend sanity checking your policy with the <a href="https://github.com/zhouzypaul/mse-check" target="_blank">action MSE test</a> before submitting an evaluation job.
                     </div>
