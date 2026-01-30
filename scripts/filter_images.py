@@ -24,8 +24,10 @@ def main(input_folder, output_folder):
         # Visualize the image
         img_path = os.path.join(input_folder, filename)
         img = mpimg.imread(img_path)
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)  # Convert to BGR for OpenCV
-        cv2.imshow("Image", img)
+        display_img = cv2.cvtColor(
+            img, cv2.COLOR_RGB2BGR
+        )  # Convert to BGR for OpenCV display
+        cv2.imshow("Image", display_img)
 
         # Ask user for input using cv2.waitKey
         key = cv2.waitKey(0) & 0xFF  # Wait indefinitely for a key press

@@ -106,7 +106,7 @@ def main(input_dir, output_dir, input_format):
     current_idx = start_idx
     last_save_time = time.time()
 
-    # convert format to rgb
+    # Convert input to RGB for processing/storage.
     if input_format.lower() == "bgr":
         all_images = [
             {
@@ -129,8 +129,9 @@ def main(input_dir, output_dir, input_format):
             "image_primary"
         ] = img  # This updates the image in all_images since it's a reference
 
-        # Display image
-        cv2.imshow("Image", img)
+        # Display image (OpenCV expects BGR)
+        display_img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        cv2.imshow("Image", display_img)
         print(f"\nImage {current_idx + 1}/{len(all_images)}")
         print(
             "Press: 'p' for positive, 'n' for negative, 's' to skip, 'b' to go back, 'q' to quit"
@@ -207,7 +208,7 @@ if __name__ == "__main__":
         type=str,
         choices=["rgb", "bgr"],
         default="rgb",
-        help="Input image format (rgb or bgr). OpenCV displays in RGB format.",
+        help="Input image format (rgb or bgr). OpenCV expects BGR for display.",
     )
     args = parser.parse_args()
 
