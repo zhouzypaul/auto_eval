@@ -23,7 +23,7 @@ pip install -e .
 You will also need the following dependencies:
  - `manipulator_gym` for the robot environment: https://github.com/rail-berkeley/manipulator_gym
  - `agentlace` for distributed policy and robot environments: https://github.com/youliangtan/agentlace
- - `robot_eval_logger` for logging: https://github.com/zhouzypaul/robot_eval_logger
+ - `robot_eval_logger` for logging: https://github.com/zhouzypaul/robot_eval_logger. Please use the `auto_eval` branch instead of `main`.
 
 Other optional packages:
  - `jaxrl_m` (Optional, for jaxrl goal-conditioned policy): https://github.com/rail-berkeley/soar/tree/main/model_training
